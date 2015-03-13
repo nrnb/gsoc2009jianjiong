@@ -1,0 +1,100 @@
+
+
+<project name="CyThesaurus" default="jar" basedir=".">
+  <description>Builds, tests, and runs the project CyThesaurus.</description>
+
+  <!-- =================================================================== -->
+  <!-- Initialization target                                               -->
+  <!-- =================================================================== -->
+  <target name="init">
+    <tstamp/>
+    <property name="src" location="src"/>
+    <property name="images" location="images"/>
+    <property name="resources" location="resources"/>
+    <property name="lib" location="lib"/>
+    <property name="cyrelease" location="../cytoscape"/>
+    <property name="cylib" location="${cyrelease}/lib"/>
+    <property name="build" location="build"/>
+    <property name="bridgedb.dir" location="./lib"/>
+    <property name="build.classes" location="${build}/classes"/>
+    <property name="build.images" location="${build.classes}/images"/>
+	
+    <!-- Classpath with all lib JAR Files and all Cytoscape Core classes -->
+    <path id="classpath">
+        <fileset dir="${cylib}">
+            <include name="*.jar"/>
+        </fileset>
+
+        <!-- include cytoscape.jar, which is it release directory top level -->
+        <fileset dir="${cyrelease}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${bridgedb.dir}">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${lib}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+	
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Compiles the project                                                -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="init">
+	<fail message="Can't find ${cyrelease}/cytoscape.jar, please specify the path to cytoscape with -Dcytoscape.dir=....">
+		<condition>
+			<not><available file="${cyrelease}/cytoscape.jar"/></not>
+		</condition>
+	</fail>	
+	<fail message="Can't find ${bridgedb.dir}/bridgedb.jar, please specify the path to bridgedb.jar with -Dbridgedb.dir=....">
+		<condition>
+			<not><available file="${bridgedb.dir}/bridgedb.jar"/></not>
+		</condition>
+	</fail>	
+    <mkdir dir="${build}"/>
+    <mkdir dir="${build.classes}"/>
+    <javac srcdir="${src}" destdir="${build.classes}">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Clean up, get back to original state                                -->
+  <!-- =================================================================== -->
+  <target name="clean" depends="init">
+    <echo message="delete ${build}"/>
+    <delete dir="${build}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the project jar file                                        -->
+  <!-- =================================================================== -->
+  <target name="jar" depends="compile">
+    <copy file="${resources}/plugin.props" todir="${build.classes}/csplugins/id/mapping" />
+    <copy file="${resources}/biomart_dataset_filter.txt" todir="${build.classes}/resources" />
+    <copy todir="${build.images}">
+      <fileset dir="${images}"/>
+    </copy>
+    <jar destfile="CyThesaurus.jar">
+      <manifest>
+        <attribute name="Cytoscape-Plugin"
+          value="csplugins.id.mapping.CyThesaurusPlugin" />
+      </manifest>
+
+      <fileset dir= "${build.classes}" />
+      <zipfileset src="lib/bridgedb.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/bridgedb-picr.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/bridgedb-bio.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/derby.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/cytoscape-plugins-comm.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/bridgedb-synergizer.jar" excludes="META-INF/*"/>
+      <zipfileset src="lib/synergizer-client.jar" excludes="META-INF/*"/>
+    </jar>
+  </target>
+  
+</project>
+
+
+
